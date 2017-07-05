@@ -36,7 +36,22 @@ void setup() {
         uECC_set_rng(&RNG);
 }
 
+
+void gen_random(char *s, const int len) {
+    static const char alphanum[] =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+
+    for (int i = 0; i < len; ++i) {
+        s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+    }
+
+    s[len] = 0;
+}
+
 void loop() {
+
         uint32_t free = system_get_free_heap_size();
         Serial.printf("free heap size : %d\n", free );
 
@@ -87,8 +102,14 @@ void loop() {
 
         /* Create a SHA256 hash */
         SHA256 hasher;
+
         /* Update the hash with your message, as many times as you like */
-        const char *hello = "Hello World";
+        char hello[2048];
+        gen_random(hello,2048);
+        Serial.print("Message :");Serial.println(hello);
+
+
+
         hasher.doUpdate(hello, strlen(hello));
         /* Compute the final hash */
         byte hash[SHA256_SIZE];
@@ -105,7 +126,7 @@ void loop() {
         Serial.println("---");
         Serial.print("Signature (private 1)):");
 
-        uint8_t signature[42];
+        uint8_t signature[40];
         uECC_sign(private1, hash, SHA256_SIZE,signature, curve);
 
         for (byte i=0; i < NELEMS(signature); i++)
@@ -119,7 +140,7 @@ void loop() {
         Serial.printf("Check against public2 = %d\n", uECC_verify(public2, hash, SHA256_SIZE,signature, curve));
         Serial.print("Signature (private 2)):");
 
-        uint8_t signature2[42];
+        uint8_t signature2[40];
         uECC_sign(private2, hash, SHA256_SIZE,signature2, curve);
 
         for (byte i=0; i < NELEMS(signature2); i++)
